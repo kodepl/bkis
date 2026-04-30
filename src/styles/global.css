@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-radio-dark text-radio-text font-body antialiased;
+  }
+}
+
+@layer components {
+  .radio-card {
+    @apply bg-radio-surface border border-radio-border rounded-lg overflow-hidden;
+  }
+  .radio-card:hover {
+    @apply border-radio-green/30;
+  }
+  .freq-badge {
+    @apply font-mono text-xs text-radio-green bg-radio-green/10 px-2 py-1 rounded border border-radio-green/20;
+  }
+  .section-label {
+    @apply font-mono text-xs text-radio-muted uppercase tracking-widest;
+  }
+  .equalizer-bar {
+    @apply w-1 bg-radio-green rounded-full animate-equalizer;
+  }
+  .headline-display {
+    @apply font-display text-3xl md:text-4xl font-bold leading-tight tracking-tight;
+  }
+  .headline-md {
+    @apply font-display text-xl md:text-2xl font-semibold leading-tight;
+  }
+  .article-meta {
+    @apply font-mono text-xs text-radio-muted;
+  }
+  .tag-pill {
+    @apply inline-block text-xs font-mono px-2 py-1 rounded border border-radio-border bg-radio-panel text-radio-muted hover:border-radio-green hover:text-radio-green transition;
+  }
+  .on-air-dot {
+    @apply w-2 h-2 bg-radio-green rounded-full animate-pulse;
+  }
+}

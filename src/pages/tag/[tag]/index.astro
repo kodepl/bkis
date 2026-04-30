@@ -1,0 +1,58 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const allTags = new Set<string>();
+  posts.forEach(post => {
+    post.data.tags?.forEach(tag => {
+      allTags.add(tag.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+    });
+    allTags.add(post.data.category.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+  });
+  return Array.from(allTags).map(tag => ({
+    params: { tag },
+    props: {
+      tag,
+      posts: posts.filter(p =>
+        p.data.tags?.some(t => t.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') === tag) ||
+        p.data.category.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') === tag
+      )
+    },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const displayTag = tag.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+---
+
+<BaseLayout title={`${displayTag} Broadcasts`} description={`BKIS broadcasts about ${displayTag}.`}>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <span class="section-label">Channel</span>
+    <h1 class="headline-display mb-2">{displayTag}</h1>
+    <p class="text-radio-muted mb-8">{sortedPosts.length} broadcasts</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {sortedPosts.map((post) => (
+        <article class="radio-card group">
+          <a href={`/blog/${post.slug}/`} class="block">
+            <img src={post.data.heroImage} alt={post.data.title} class="w-full aspect-video object-cover group-hover:opacity-80 transition" />
+          </a>
+          <div class="p-4">
+            <span class="freq-badge text-[10px]">{post.data.category}</span>
+            <h2 class="font-display font-semibold mt-2 leading-snug">
+              <a href={`/blog/${post.slug}/`} class="hover:text-radio-green transition">{post.data.title}</a>
+            </h2>
+            <span class="article-meta mt-2 block">{formatDate(post.data.pubDate)}</span>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

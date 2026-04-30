@@ -1,0 +1,87 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft && data.category === post.data.category);
+const relatedPosts = allPosts.filter(p => p.slug !== post.slug).slice(0, 3);
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
+---
+
+<BaseLayout title={post.data.title} description={post.data.description} image={post.data.heroImage}>
+  <article>
+    <!-- Hero -->
+    <div class="relative h-64 md:h-80 lg:h-[420px]">
+      <img src={post.data.heroImage} alt={post.data.title} class="w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-gradient-to-t from-radio-dark via-radio-dark/60 to-transparent"></div>
+      <div class="absolute bottom-0 left-0 right-0 max-w-4xl mx-auto px-4 pb-8">
+        <span class="freq-badge mb-4">{post.data.category}</span>
+        <h1 class="headline-display text-white">{post.data.title}</h1>
+      </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+      <!-- Meta -->
+      <div class="flex flex-wrap items-center gap-4 py-4 border-b border-radio-border mb-8">
+        <span class="article-meta">{formatDate(post.data.pubDate)}</span>
+        <span class="text-radio-border">|</span>
+        <span class="freq-badge">{post.data.category}</span>
+        <span class="text-radio-border">|</span>
+        <span class="article-meta">{Math.ceil(post.body.length / 200)} min listen</span>
+      </div>
+
+      <!-- Content -->
+      <div class="prose prose-invert prose-lg max-w-none">
+        <p class="lead text-xl text-radio-muted font-light mb-8">{post.data.description}</p>
+        <Content />
+      </div>
+
+      <!-- Tags -->
+      <div class="mt-10 pt-8 border-t border-radio-border">
+        <h4 class="section-label mb-3">Tagged</h4>
+        <div class="flex flex-wrap gap-2">
+          {post.data.tags.map(tag => (
+            <a href={`/tag/${tag.toLowerCase().replace(/\s+/g, '-')}/`} class="tag-pill">{tag}</a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </article>
+
+  {relatedPosts.length > 0 && (
+    <section class="bg-radio-panel border-t border-radio-border py-10">
+      <div class="max-w-7xl mx-auto px-4">
+        <span class="section-label">Related</span>
+        <h2 class="headline-md mt-1 mb-6">More from this Channel</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {relatedPosts.map(related => (
+            <article class="radio-card group">
+              <a href={`/blog/${related.slug}/`} class="block">
+                <img src={related.data.heroImage} alt={related.data.title} class="w-full aspect-video object-cover group-hover:opacity-80 transition" />
+              </a>
+              <div class="p-4">
+                <span class="freq-badge text-[10px]">{related.data.category}</span>
+                <h3 class="font-display font-semibold mt-2 leading-snug">
+                  <a href={`/blog/${related.slug}/`} class="hover:text-radio-green transition">{related.data.title}</a>
+                </h3>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+</BaseLayout>

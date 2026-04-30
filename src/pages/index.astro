@@ -1,0 +1,203 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const featuredPost = sortedPosts.find(p => p.data.featured) || sortedPosts[0];
+const recentPosts = sortedPosts.filter(p => p !== featuredPost).slice(0, 9);
+
+const categories = [...new Set(allPosts.map(p => p.data.category))];
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+---
+
+<BaseLayout 
+  title="BKIS Radio - Broadcasting Insights 24/7" 
+  description="BKIS Broadcast Network - Your source for technology, science, business and lifestyle insights."
+>
+  <!-- Hero / Now Playing -->
+  {featuredPost && (
+    <section class="relative overflow-hidden bg-radio-panel border-b border-radio-border">
+      <!-- Waveform background -->
+      <div class="absolute inset-0 opacity-10">
+        <svg class="w-full h-full" viewBox="0 0 1200 400" preserveAspectRatio="none">
+          <path d="M0,200 Q50,100 100,200 T200,200 T300,200 T400,200 T500,200 T600,200 T700,200 T800,200 T900,200 T1000,200 T1100,200 T1200,200" 
+            stroke="#00ff88" stroke-width="2" fill="none"/>
+          <path d="M0,200 Q50,300 100,200 T200,200 T300,200 T400,200 T500,200 T600,200 T700,200 T800,200 T900,200 T1000,200 T1100,200 T1200,200" 
+            stroke="#00d4ff" stroke-width="2" fill="none" transform="translate(0, 20)"/>
+        </svg>
+      </div>
+
+      <div class="relative max-w-7xl mx-auto px-4 py-10 md:py-14">
+        <div class="flex flex-col md:flex-row gap-8 items-center">
+          <!-- Featured Image -->
+          <div class="w-full md:w-1/2">
+            <div class="relative group">
+              <div class="absolute -inset-1 bg-radio-green/20 rounded-xl blur opacity-50 group-hover:opacity-75 transition"></div>
+              <a href={`/blog/${featuredPost.slug}/`} class="relative block rounded-xl overflow-hidden border border-radio-border">
+                <img 
+                  src={featuredPost.data.heroImage} 
+                  alt={featuredPost.data.title}
+                  class="w-full aspect-video object-cover group-hover:scale-105 transition duration-500"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-radio-dark/80 to-transparent"></div>
+                <div class="absolute bottom-4 left-4 flex items-center gap-2">
+                  <div class="w-8 h-8 bg-radio-green rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-radio-dark" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                  </div>
+                  <span class="font-mono text-xs text-radio-green">Now Broadcasting</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Featured Content -->
+          <div class="w-full md:w-1/2">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="freq-badge">{featuredPost.data.category}</span>
+              <span class="article-meta">{formatDate(featuredPost.data.pubDate)}</span>
+            </div>
+            <h1 class="headline-display mb-4">
+              <a href={`/blog/${featuredPost.slug}/`} class="hover:text-radio-green transition">
+                {featuredPost.data.title}
+              </a>
+            </h1>
+            <p class="text-radio-muted text-lg mb-6 leading-relaxed">{featuredPost.data.description}</p>
+            <div class="flex items-center gap-3">
+              <a href={`/blog/${featuredPost.slug}/`} class="inline-flex items-center gap-2 bg-radio-green text-radio-dark font-mono text-sm font-medium px-5 py-2.5 rounded hover:bg-radio-green-dim transition">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                Listen Now
+              </a>
+              <span class="font-mono text-xs text-radio-muted">{Math.ceil(featuredPost.body.length / 200)} min read</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Recent Broadcasts -->
+  <section class="max-w-7xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <span class="section-label">Latest Broadcasts</span>
+        <h2 class="headline-md mt-1">Recently Aired</h2>
+      </div>
+      <a href="/blog/" class="font-mono text-sm text-radio-green hover:underline">View All &rarr;</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {recentPosts.slice(0, 6).map((post, index) => (
+        <article class="radio-card group">
+          <a href={`/blog/${post.slug}/`} class="block">
+            <div class="relative overflow-hidden">
+              <img 
+                src={post.data.heroImage} 
+                alt={post.data.title}
+                class="w-full aspect-video object-cover group-hover:scale-105 transition duration-500"
+              />
+              <div class="absolute top-3 left-3">
+                <span class="freq-badge">{post.data.category}</span>
+              </div>
+              <div class="absolute inset-0 bg-radio-dark/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                <div class="w-12 h-12 bg-radio-green rounded-full flex items-center justify-center">
+                  <svg class="w-6 h-6 text-radio-dark" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+          </a>
+          <div class="p-4">
+            <h3 class="font-display text-lg font-semibold mb-2 leading-snug">
+              <a href={`/blog/${post.slug}/`} class="hover:text-radio-green transition">
+                {post.data.title}
+              </a>
+            </h3>
+            <p class="text-radio-muted text-sm line-clamp-2 mb-3">{post.data.description}</p>
+            <div class="flex items-center justify-between">
+              <span class="article-meta">{formatDate(post.data.pubDate)}</span>
+              <span class="article-meta">{Math.ceil(post.body.length / 200)} min</span>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- More Content + Sidebar -->
+  <section class="max-w-7xl mx-auto px-4 pb-10">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Main -->
+      <div class="lg:col-span-3">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <span class="section-label">Archive</span>
+            <h2 class="headline-md mt-1">More Broadcasts</h2>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          {recentPosts.slice(6, 12).map((post) => (
+            <article class="radio-card p-4 flex gap-4 group">
+              <a href={`/blog/${post.slug}/`} class="shrink-0 w-28 md:w-36">
+                <img 
+                  src={post.data.heroImage} 
+                  alt={post.data.title}
+                  class="w-full aspect-video object-cover rounded group-hover:opacity-80 transition"
+                />
+              </a>
+              <div class="flex-1 min-w-0">
+                <span class="freq-badge text-[10px]">{post.data.category}</span>
+                <h3 class="font-display font-semibold mt-1.5 mb-1 leading-snug truncate">
+                  <a href={`/blog/${post.slug}/`} class="hover:text-radio-green transition">
+                    {post.data.title}
+                  </a>
+                </h3>
+                <p class="text-radio-muted text-sm line-clamp-2">{post.data.description}</p>
+                <span class="article-meta mt-1">{formatDate(post.data.pubDate)}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="space-y-6">
+        <!-- Categories -->
+        <div class="radio-card p-5">
+          <h3 class="section-label mb-4">Channels</h3>
+          <div class="space-y-2">
+            {categories.map(cat => (
+              <a 
+                href={`/tag/${cat.toLowerCase().replace(/\s+/g, '-')}/`}
+                class="flex items-center justify-between py-2 border-b border-radio-border last:border-0 hover:text-radio-green transition"
+              >
+                <span class="font-mono text-sm">{cat}</span>
+                <span class="font-mono text-xs text-radio-muted">{allPosts.filter(p => p.data.category === cat).length}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="radio-card p-5">
+          <h3 class="section-label mb-4">Tags</h3>
+          <div class="flex flex-wrap gap-2">
+            {['Technology', 'Science', 'Business', 'Health', 'Culture', 'Design', 'Travel', 'Finance'].map(tag => (
+              <a href={`/tag/${tag.toLowerCase()}/`} class="tag-pill">{tag}</a>
+            ))}
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="radio-card p-5">
+          <h3 class="section-label mb-3">About BKIS</h3>
+          <p class="text-radio-muted text-sm leading-relaxed">Broadcasting knowledge and insights 24/7. Tune in for the latest in technology, science, and culture.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
