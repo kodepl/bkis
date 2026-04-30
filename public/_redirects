@@ -1,0 +1,2 @@
+/blog/* /blog/:splat 301
+/tag/* /tag/:splat 301
